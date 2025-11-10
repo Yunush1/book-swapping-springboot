@@ -1,0 +1,39 @@
+spring:
+  application:
+    name: book-swap
+
+  data:
+    mongodb:
+      uri: mongodb+srv://Asdfg1234:Asdfg4321@cluster0.0iccjcs.mongodb.net/spring-database?retryWrites=true&w=majority&appName=Cluster0
+      database: spring-database
+
+  docker:
+    compose:
+      enabled: false
+
+  jackson:
+    default-property-inclusion: non_null
+
+  autoconfigure:
+    exclude: org.springframework.ai.vectorstore.mongodb.autoconfigure.MongoDBAtlasVectorStoreAutoConfiguration
+
+  output:
+    ansi:
+      enabled: ALWAYS
+
+server:
+  port: 8089
+  servlet:
+    context-path: /api
+
+jwt:
+  secret: 404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
+  accessTokenExpiration: 3600000
+  refreshTokenExpiration: 86400000
+
+logging:
+  pattern:
+    console: "%clr(%d{yyyy-MM-dd HH:mm:ss.SSS}){faint} %clr(%5p) %clr(${PID:- }){magenta} %clr(---){faint} %clr([%15.15t]){faint} %clr(%-40.40logger{39}){cyan} %clr(:){faint} %m%n%wEx"
+  level:
+    root: INFO
+    com.book.swap: DEBUG
