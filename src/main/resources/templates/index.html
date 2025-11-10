@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BookSwap App</title>
+    <style>
+        body {
+          font-family: system-ui, sans-serif;
+          background-color: #f3f4f6;
+          color: #111827;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          height: 100vh;
+          flex-direction: column;
+          margin: 0;
+        }
+        h1 {
+          color: #2563eb;
+        }
+        .status {
+          background: #dcfce7;
+          padding: 10px 20px;
+          border-radius: 6px;
+          margin-top: 10px;
+          border: 1px solid #86efac;
+          font-weight: bold;
+        }
+        .status.down {
+          background: #fee2e2;
+          border-color: #fca5a5;
+          color: #b91c1c;
+        }
+        p {
+          margin-top: 10px;
+          color: #374151;
+        }
+    </style>
+</head>
+<body>
+<h1>📚 BookSwap is Running!</h1>
+<div id="healthStatus" class="status">Checking health...</div>
+<p>Try hitting API endpoints like <code>/api/books</code> or check logs for details.</p>
+
+<script>
+    async function checkHealth() {
+      const el = document.getElementById('healthStatus');
+      try {
+        const response = await fetch('/api/actuator/health');
+        if (!response.ok) throw new Error('HTTP ' + response.status);
+        const data = await response.json();
+        if (data.status === 'UP') {
+          el.textContent = '✅ Application Health: UP';
+          el.classList.remove('down');
+        } else {
+          el.textContent = '⚠️ Application Health: ' + data.status;
+          el.classList.add('down');
+        }
+      } catch (err) {
+        el.textContent = '❌ Health check failed';
+        el.classList.add('down');
+        console.error('Health check error:', err);
+      }
+    }
+
+    checkHealth();
+    // Optional: auto-refresh every 30 seconds
+    setInterval(checkHealth, 30000);
+</script>
+</body>
+</html>

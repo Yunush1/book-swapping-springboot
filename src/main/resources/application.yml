@@ -21,8 +21,9 @@ spring:
     ansi:
       enabled: ALWAYS
 
+
 server:
-  port: 8089
+  port: 8080
   servlet:
     context-path: /api
 
@@ -30,6 +31,14 @@ jwt:
   secret: 404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
   accessTokenExpiration: 3600000
   refreshTokenExpiration: 86400000
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always
 
 logging:
   pattern:
