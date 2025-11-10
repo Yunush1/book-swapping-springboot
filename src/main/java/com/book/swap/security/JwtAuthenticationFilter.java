@@ -96,7 +96,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
      * Utility to check if the request path should skip JWT validation.
      */
     private boolean isAuthEndpoint(String path) {
-        return path.contains("/auth/") || path.startsWith("/api/auth/") || path.equals("/api/") ||path.contains("/actuator/**");
+        return path.contains("/auth/") || path.startsWith("/api/auth/") || path.equals("/api/") || path.startsWith("/api/actuator");
     }
 
     /**
