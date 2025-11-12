@@ -1,5 +1,6 @@
 package com.book.swap.services;
 
+import com.book.swap.models.dto.ApiResponse;
 import com.book.swap.models.dto.UserDTO;
 import com.book.swap.models.entities.DbUsers;
 import com.book.swap.repository.UserRepository;
@@ -7,6 +8,8 @@ import lombok.RequiredArgsConstructor;
 import org.bson.types.ObjectId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -32,13 +35,13 @@ public class UserService {
     }
 
 
-    public Map<String, Object> getAllUsers(String after, Integer limit, String search, Integer role) {
+    public ApiResponse<Page<UserDTO>> getAllUsers(String after, Integer limit, String search, Integer role) {
         int requestedLimit = (limit != null && limit > 0) ? limit : 10;
         int pageLimit = requestedLimit + 1; // Fetch one extra to check if more exist
 
         Query query = new Query();
 
-        // ✅ Cursor-based pagination (after)
+        // ✅ Cursor-based pagination
         if (after != null && !after.isEmpty()) {
             try {
                 ObjectId afterObjectId = new ObjectId(after);
@@ -48,7 +51,7 @@ public class UserService {
             }
         }
 
-        // 🔍 Search filter (case-insensitive on name/email/username)
+        // 🔍 Search filter
         if (search != null && !search.trim().isEmpty()) {
             query.addCriteria(new Criteria().orOperator(
                     Criteria.where("name").regex(search, "i"),
@@ -62,7 +65,7 @@ public class UserService {
             query.addCriteria(Criteria.where("roles").in(role));
         }
 
-        // ⚙️ Sort ascending by ObjectId and limit
+        // ⚙️ Sort ascending by ObjectId
         query.with(Sort.by(Sort.Direction.ASC, "_id"));
         query.limit(pageLimit);
 
@@ -71,7 +74,7 @@ public class UserService {
         // 🔄 Check if there are more items
         boolean hasMore = users.size() > requestedLimit;
 
-        // Remove the extra item if we fetched one
+        // Remove extra item if exists
         if (hasMore) {
             users = users.subList(0, requestedLimit);
         }
@@ -81,21 +84,15 @@ public class UserService {
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
 
-        // 🧭 Determine next cursor - only if there are more items
-        String nextCursor = hasMore && !userDTOs.isEmpty()
-                ? userDTOs.get(userDTOs.size() - 1).getId()
-                : null;
+        // 🧾 Wrap in Page object (manual pagination)
+        Page<UserDTO> page = new PageImpl<>(userDTOs);
 
-        // 📦 Build response
-        Map<String, Object> response = new LinkedHashMap<>();
-        response.put("success", true);
-        response.put("data", userDTOs);
-        response.put("limit", requestedLimit);
-        response.put("count", userDTOs.size());
-        response.put("nextCursor", nextCursor);
-        response.put("hasMore", hasMore);
-
-        return response;
+        // ✅ Wrap everything in ApiResponse
+        return ApiResponse.<Page<UserDTO>>builder()
+                .data(page)
+                .message("Users fetched successfully" + (hasMore ? " (more available)" : ""))
+                .success(true)
+                .build();
     }
 
     private UserDTO convertToDTO(DbUsers dbUsers) {

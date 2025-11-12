@@ -121,9 +121,7 @@ public class TokenService {
      */
     @Transactional(readOnly = true)
     public TokenValidationResponse validateAccessToken(String accessToken) {
-        logger.info("Validating access token");
-
-        try {
+       try {
             // Extract claims
             String userEmail = jwtService.extractUsername(accessToken);
             String tokenType = jwtService.extractClaim(accessToken, claims ->

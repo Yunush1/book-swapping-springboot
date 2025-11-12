@@ -1,5 +1,6 @@
 package com.book.swap.controllers.users;
 
+import com.book.swap.models.dto.ApiResponse;
 import com.book.swap.models.dto.UserDTO;
 import com.book.swap.services.UserService;
 import lombok.RequiredArgsConstructor;
@@ -26,14 +27,9 @@ public class UserController {
 
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
     @GetMapping("/get-all-users")
-    public ResponseEntity<Map<String, Object>> getUsers(
-            @RequestParam(required = false) String nextCursor,
-            @RequestParam(required = false) Integer limit,
-            @RequestParam(required = false) String search,
-            @RequestParam(required = false) Integer role
-    ) {
-        Map<String, Object> response = userService.getAllUsers(nextCursor, limit, search, role);
-        return ResponseEntity.ok(response);
+    public ResponseEntity<ApiResponse<Page<UserDTO>>> getUsers(@RequestParam(required = false) String nextCursor, @RequestParam(required = false) Integer limit, @RequestParam(required = false) String search, @RequestParam(required = false) Integer role) {
+
+        return ResponseEntity.ok(userService.getAllUsers(nextCursor, limit, search, role));
     }
 
 

@@ -3,70 +3,94 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BookSwap App</title>
+    <title>BookSwap Dynamic API Dashboard</title>
     <style>
         body {
           font-family: system-ui, sans-serif;
-          background-color: #f3f4f6;
+          background: #f9fafb;
           color: #111827;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          height: 100vh;
-          flex-direction: column;
           margin: 0;
+          padding: 40px 10px;
         }
-        h1 {
-          color: #2563eb;
-        }
+        h1, h2 { color: #2563eb; }
         .status {
-          background: #dcfce7;
-          padding: 10px 20px;
-          border-radius: 6px;
-          margin-top: 10px;
-          border: 1px solid #86efac;
-          font-weight: bold;
+          font-weight: bold; background: #dcfce7; border: 1px solid #86efac;
+          color: #166534; padding: 8px 20px; border-radius: 6px; display: inline-block;
+          margin-bottom: 20px;
         }
-        .status.down {
-          background: #fee2e2;
-          border-color: #fca5a5;
-          color: #b91c1c;
+        .status.down { background: #fee2e2; border-color: #fca5a5; color: #b91c1c; }
+        table { border-collapse: collapse; width: 100%; max-width: 1000px; margin-top: 10px; }
+        th, td { padding: 10px 12px; border-bottom: 1px solid #e5e7eb; text-align: left; }
+        th { background: #f3f4f6; font-weight: 600; }
+        .method-badge {
+          padding: 4px 10px; border-radius: 6px; color: white; font-weight: 600;
+          font-size: 0.9em; text-transform: uppercase;
         }
-        p {
-          margin-top: 10px;
-          color: #374151;
-        }
+        .GET { background-color: #16a34a; }
+        .POST { background-color: #2563eb; }
+        .PUT { background-color: #f59e0b; }
+        .DELETE { background-color: #dc2626; }
+        .PATCH { background-color: #9333ea; }
     </style>
 </head>
 <body>
-<h1>📚 BookSwap is Running!</h1>
+<h1>📚 BookSwap Dynamic API Dashboard</h1>
 <div id="healthStatus" class="status">Checking health...</div>
-<p>Try hitting API endpoints like <code>/api/books</code> or check logs for details.</p>
+
+<h2>Endpoints</h2>
+<table id="endpointTable">
+    <thead><tr><th>HTTP</th><th>Path</th><th>Handler</th></tr></thead>
+    <tbody></tbody>
+</table>
 
 <script>
-    async function checkHealth() {
-      const el = document.getElementById('healthStatus');
+    async function loadHealth() {
+      const statusEl = document.getElementById("healthStatus");
       try {
-        const response = await fetch('/api/actuator/health');
-        if (!response.ok) throw new Error('HTTP ' + response.status);
-        const data = await response.json();
-        if (data.status === 'UP') {
-          el.textContent = '✅ Application Health: UP';
-          el.classList.remove('down');
+        const res = await fetch("/api/actuator/health");
+        const health = await res.json();
+        if (health.status === "UP") {
+          statusEl.textContent = "✅ Application Health: UP";
+          statusEl.classList.remove("down");
         } else {
-          el.textContent = '⚠️ Application Health: ' + data.status;
-          el.classList.add('down');
+          statusEl.textContent = "⚠️ Application Health: " + health.status;
+          statusEl.classList.add("down");
         }
-      } catch (err) {
-        el.textContent = '❌ Health check failed';
-        el.classList.add('down');
-        console.error('Health check error:', err);
+      } catch (e) {
+        statusEl.textContent = "❌ Health check failed";
+        statusEl.classList.add("down");
       }
     }
 
-    checkHealth();
-    // Optional: auto-refresh every 30 seconds
-    setInterval(checkHealth, 30000);
+    async function loadMappings() {
+      const tableBody = document.querySelector("#endpointTable tbody");
+      tableBody.innerHTML = "";
+      try {
+        const res = await fetch("/api/actuator/mappings");
+        const data = await res.json();
+        const contexts = data.contexts || {};
+        const appContext = Object.values(contexts)[0];
+        const mappings = appContext.mappings.dispatcherServlets.dispatcherServlet;
+        console.log(mappings);
+        mappings.forEach(m => {
+          m.details.requestMappingConditions.methods.forEach(method => {
+            const row = document.createElement("tr");
+            const badge = `<span class="method-badge ${method}">${method}</span>`;
+            const path = m.details.requestMappingConditions.patterns?.join(", ") || "";
+            const handler = m.details.handlerMethod?.className || "";
+            row.innerHTML = `<td>${badge}</td><td>${path}</td><td>${handler}</td>`;
+            tableBody.appendChild(row);
+          });
+        });
+      } catch (e) {
+        const row = document.createElement("tr");
+        row.innerHTML = `<td colspan="3">❌ Unable to fetch mappings</td>`;
+        tableBody.appendChild(row);
+      }
+    }
+
+    loadHealth();
+    loadMappings();
 </script>
 </body>
 </html>
