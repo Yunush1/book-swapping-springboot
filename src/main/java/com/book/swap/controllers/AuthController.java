@@ -30,7 +30,6 @@ public class AuthController {
     private final AuthService authService;
     private final TokenService tokenService;
     private final CookieUtil cookieUtil;
-    private final JwtService jwtService;
 
     @PostMapping("/register")
     public ResponseEntity<UserDTO> register(@RequestBody UserDTO userDTO) {
